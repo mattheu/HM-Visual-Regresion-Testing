@@ -1,13 +1,12 @@
 const fs = require( 'fs' );
 const del = require( 'del' );
 
-const options = require( '../options' );
+module.exports = options => {
+	const { directories } = options;
 
-const { directories } = options;
-
-module.exports = () => {
 	// Create dirs if they don't exist.
 	[
+		`${directories.base}`,
 		`${directories.base}/${directories.imgRef}`,
 		`${directories.base}/${directories.imgTest}`,
 		`${directories.base}/${directories.imgDiff}`,
@@ -19,3 +18,4 @@ module.exports = () => {
 		`${directories.base}/${directories.imgDiff}`,
 	].forEach( dir => del( `${dir}/*.png` ) );
 }
+

@@ -1,13 +1,11 @@
-const options = require( '../options' );
-
 class Result {
 	constructor( { scenario, slug, status, imgRef, imgTest, imgDiff } ) {
 		this.scenario = scenario;
 		this.slug = slug;
 		this.status = status;
-		this.imgRef = imgRef;
-		this.imgTest = imgTest;
-		this.imgDiff = imgDiff;
+		this.imgRef = imgRef || '';
+		this.imgTest = imgTest || '';
+		this.imgDiff = imgDiff || '';
 	}
 
 	isOK() {
@@ -29,17 +27,17 @@ class Result {
 			passed: isOK,
 			status: this.status,
 			imgRef: {
-				src: this.imgRef.replace( `${options.directories.base}/`, '' ),
+				src: this.imgRef,
 				width,
 				height,
 			},
 			imgTest: {
-				src: this.imgTest.replace( `${options.directories.base}/`, '' ),
+				src: this.imgTest,
 				width,
 				height,
 			},
 			imgDiff: {
-				src: this.imgDiff.replace( `${options.directories.base}/`, '' ),
+				src: this.imgDiff,
 				width,
 				height,
 			},

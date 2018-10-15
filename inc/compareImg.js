@@ -25,9 +25,7 @@ module.exports = async ( img1Path, img2Path, diffPath ) => {
 				height: img1.height,
 			} );
 
-			// console.log( img1, img2, imgDiff );
-
-			const isMatch = ! pixelmatch( img1.data, img2.data, imgDiff.data, img1.width, img1.height, { threshold: 0.1 } );
+			const isMatch = ! pixelmatch( img1.data, img2.data, imgDiff.data, img1.width, img1.height, { threshold: 0.2 } );
 
 			if ( ! isMatch ) {
 				imgDiff.pack().pipe( fs.createWriteStream( diffPath ) );

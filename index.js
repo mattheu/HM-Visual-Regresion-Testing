@@ -1,9 +1,9 @@
 const slugify = require( '@sindresorhus/slugify' );
 const fs = require( 'fs' );
 const _ = require( 'lodash' );
-const Table = require('cli-table');
+const Table = require( 'cli-table' );
 
-const options = require( './options' );
+const defaultOptions = require( './defaultOptions' );
 const setup = require( './inc/setup' );
 const files = require( './inc/files' );
 const getLoggedInCookies = require( './inc/getLoggedInCookies' );
@@ -11,43 +11,28 @@ const compareImages = require( './inc/compareImg' );
 const generateResultsFile = require( './inc/generateResultsFile' );
 const generateScreenshot = require( './inc/generateScreenshot' );
 const Result = require( './inc/Result' );
+const reset = require( './inc/reset' );
 
-const viewports = [
-	{
-		'label': 'mobile',
-		'width': 320,
-		'height': 480,
-	},
-	{
-		'label': 'laptop',
-		'width': 1400,
-		'height': 900,
-	},
-];
+const runTest = async ( scenario, options ) => {
+	console.log( `Running test: ${scenario.label} - ${scenario.viewport.label}` );
 
-const scenarios = [
-	{
-		label: 'Home',
-		url: 'http://localhost:8282',
-		loggedIn: true,
-	},
-	{
-		label: 'Post Select Browse',
-		url: 'http://localhost:8282/wp/wp-admin/post.php?post=35&action=edit',
-		loggedIn: true,
-	},
-];
+	const {
+		cookies = [],
+		localStorage = {},
+		directories,
+	} = options;
 
-const runTest = async scenario => {
-	const slug = slugify( `${scenario.label}-${scenario.viewport.label}` );
-
-	const referenceImagePath = files.getRefFilePath( slug );
-	const testImagePath = files.getTestFilePath( slug );
+	const slug = slugify( `${scenario.label}-${scenario.viewport.label}` )
+	const referenceImagePath = files.getRefFilePath( slug, directories );
+	const testImagePath = files.getTestFilePath( slug, directories );
 
 	if ( fs.existsSync( referenceImagePath ) ) {
-		const diffImagePath = files.getDiffFilePath( slug );
+		const diffImagePath = files.getDiffFilePath( slug, directories );
 
-		await generateScreenshot( scenario, testImagePath );
+		await generateScreenshot( scenario, testImagePath, {
+			cookies,
+			localStorage,
+		} );
 
 		const isMatch = await compareImages( testImagePath, referenceImagePath, diffImagePath );
 
@@ -60,7 +45,11 @@ const runTest = async scenario => {
 			imgDiff: diffImagePath,
 		} );
 	} else {
-		await generateScreenshot( scenario, referenceImagePath );
+		await generateScreenshot( scenario, referenceImagePath, {
+			cookies,
+			localStorage,
+		} );
+
 		return new Result( {
 			scenario,
 			slug,
@@ -80,7 +69,7 @@ const runTest = async scenario => {
  * @param {*} scenarios
  * @param {*} viewports
  */
-const runTests = async ( scenarios, viewports ) => {
+const runTests = async ( scenarios, viewports, options ) => {
 	const tests = [];
 
 	// Combine scenarios and viewports into flat tests array.
@@ -101,7 +90,7 @@ const runTests = async ( scenarios, viewports ) => {
 	for ( let i = 0; i < batches.length; i++ ) {
 		results.push( await Promise.all( batches[ i ].map( async test => {
 			try {
-				return await runTest( test )
+				return await runTest( test, options )
 			} catch ( error ) {
 				console.log( 'error running test', error );
 			}
@@ -112,23 +101,44 @@ const runTests = async ( scenarios, viewports ) => {
 	return _.flatten( results );
 }
 
-const init = async () => {
-	setup();
+module.exports.init = async ( { options: userOptions, scenarios, viewports } ) => {
+	const options = {
+		...defaultOptions,
+		...userOptions,
+	};
+
+	setup( options );
 
 	// If at least one test requires log in, grab the cookies in preparation.
-	if ( scenarios.find( scenario => scenario.loggedIn ) ) {
-		options.cookies = options.cookies.concat( await getLoggedInCookies( 'http://localhost:8282/wp/wp-login.php', 'matt', 'password' ) );
+	if ( options.login && scenarios.find( scenario => scenario.loggedIn ) ) {
+		options.cookies = options.cookies.concat( await getLoggedInCookies( options.login ) );
 	}
 
-	const results = await runTests( scenarios, viewports );
+	const results = await runTests( scenarios, viewports, options );
 
-	generateResultsFile( results.map( result => result.toJson() ) );
-
-	const table = new Table( {
-		head: ['Test Name', 'Status', 'Reference', 'Test', 'Diff' ],
+	// Format results.
+	const formattedResults = results.map( result => {
+		const json = result.toJson();
+		json.imgRef.src = json.imgRef.src.replace( `${options.directories.base}/`, '' );
+		json.imgTest.src = json.imgTest.src.replace( `${options.directories.base}/`, '' );
+		json.imgDiff.src = json.imgDiff.src.replace( `${options.directories.base}/`, '' );
+		return json
 	} );
 
-	console.log( table.toString( results.forEach( result => table.push( Array.values( result.format() ) ) ) ) );
+	generateResultsFile( formattedResults, options.directories.base );
+
+	const table = new Table( {
+		head: [ 'Test Name', 'Status', 'Reference', 'Test', 'Diff' ],
+	} );
+
+	console.log( table.toString( results.forEach( result => table.push( Object.values( result.format() ) ) ) ) );
 }
 
-init();
+module.exports.clearRefImages = async userOptions => {
+	const options = {
+		...defaultOptions,
+		...userOptions,
+	};
+
+	reset( options.directories );
+}
