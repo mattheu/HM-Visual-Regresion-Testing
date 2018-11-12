@@ -1,15 +1,8 @@
 class Result {
-	constructor( { scenario, slug, status, imgRef, imgTest, imgDiff } ) {
+	constructor( { scenario, slug, status } ) {
 		this.scenario = scenario;
 		this.slug = slug;
 		this.status = status;
-		this.imgRef = imgRef || '';
-		this.imgTest = imgTest || '';
-		this.imgDiff = imgDiff || '';
-	}
-
-	isOK() {
-		return this.status === 'ok' || this.status === 'new';
 	}
 
 	getLabel() {
@@ -17,41 +10,15 @@ class Result {
 	}
 
 	toJson() {
-		const isOK = this.isOK();
-		const width = this.scenario.viewport.width;
-		const height = this.scenario.viewport.height;
-
 		return {
 			label: this.getLabel(),
 			slug: this.slug,
-			passed: isOK,
 			status: this.status,
-			imgRef: {
-				src: this.imgRef,
-				width,
-				height,
-			},
-			imgTest: {
-				src: this.imgTest,
-				width,
-				height,
-			},
-			imgDiff: {
-				src: this.imgDiff,
-				width,
-				height,
-			},
-		}
-	}
-
-	format() {
-		const isOK = this.isOK();
-		return {
-			'name': this.getLabel(),
-			'status': this.isOK() ? '✅' : '❌',
-			'reference': this.imgRef,
-			'test': ! isOK ? this.imgTest : '',
-			'diff': ! isOK ? this.imgDiff : '',
+			imgRef: `${this.slug}.png`,
+			imgTest: `${this.slug}.png`,
+			imgDiff: `${this.slug}.png`,
+			viewport: this.scenario.viewport,
+			url: this.scenario.url,
 		}
 	}
 }

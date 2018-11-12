@@ -1,18 +1,7 @@
 const fs = require( 'fs' );
 const pixelmatch = require( 'pixelmatch' );
 const PNG = require( 'pngjs' ).PNG;
-// const util  = require( 'util' );
-
-const readPNG = imgPath => {
-	return new Promise( ( resolve, reject ) => {
-		if ( ! fs.existsSync( imgPath ) ) {
-			reject( `Image does not exist: ${imgPath}` );
-		}
-
-		const img = fs.createReadStream( imgPath ).pipe( new PNG() );
-		img.on( 'parsed', () => resolve( img ) );
-	} );
-};
+const readPNG = require( './readPng' );
 
 module.exports = async ( img1Path, img2Path, diffPath ) => {
 	return new Promise( async resolve => {

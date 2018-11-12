@@ -1,50 +1,83 @@
 const puppeteer = require( 'puppeteer' );
 
-const generateScreenshot = async ( scenario, path, options ) => {
-	const { viewport } = scenario;
-	const browser = await puppeteer.launch();
+const launchPuppeteer = async () => {
+	const options = {
+		// headless: false,
+		// slowMo: 250,
+	};
+
+	const browser = await puppeteer.launch( options );
+
 	const page = await browser.newPage();
 
-	const { cookies = [], localStorage = {} } = options;
-
-	for ( let i = 0; i < cookies.length; i++ ) {
-		await page.setCookie( cookies[ i ] );
+	return {
+		browser,
+		page,
 	}
+};
 
-	await page.setViewport( {
+const pageSetViewport = async ( page, viewport ) => {
+	return await page.setViewport( {
 		width: viewport.width,
 		height: viewport.height,
 	} );
+}
 
-	await page.goto( scenario.url );
+const pageSetCookies = async ( page, cookies ) => {
+	for ( let i = 0; i < cookies.length; i++ ) {
+		await page.setCookie( cookies[ i ] );
+	}
+}
 
-	if ( localStorage && Object.values( localStorage ).length > 0 ) {
-		await page.evaluate( editorPreferences => {
-			localStorage.clear();
-			Object.keys( localStorage ).forEach( key => {
-				localStorage.setItem( key, JSON.stringify( localStorage[ key ] ) );
-			} );
-		}, localStorage );
-		await page.reload();
+const pageSetLocalStorage = async ( page, localStorage ) => {
+	if ( ! localStorage || Object.values( localStorage ).length < 1 ) {
+		return;
 	}
 
-	if ( scenario.removeSelectors && scenario.removeSelectors.length ) {
-		await page.evaluate( removeSelectors => {
-			removeSelectors.forEach( selector => {
-				const els = document.querySelectorAll( selector );
-				if ( els ) {
-					 els.forEach( el => el.remove() );
-				}
-			} )
-		}, scenario.removeSelectors );
+	await page.evaluate( toStore => {
+		localStorage.clear();
+		Object.keys( toStore ).forEach( key => {
+			toStore.setItem( key, JSON.stringify( toStore[ key ] ) );
+		} );
+	}, localStorage );
+	await page.reload();
+}
+
+const pageRemoveSelectors = async ( page, removeSelectors ) => {
+	if ( ! removeSelectors || removeSelectors.length < 1 ) {
+		return;
 	}
 
-	await page.screenshot( {
-		path,
-		fullPage: true,
-	} );
+	await page.evaluate( removeSelectors => {
+		removeSelectors.forEach( selector => {
+			const els = document.querySelectorAll( selector );
+			if ( els && els.length > 0 ) {
+				els.forEach( el => el.remove() );
+			}
+		} )
+	}, removeSelectors );
+}
 
+const generateScreenshot = async ( scenario, options ) => {
+	const { viewport } = scenario;
+	const { cookies = [], localStorage = {} } = options;
+	const { browser, page } = await launchPuppeteer();
+
+	const removeSelectors = [
+		...( options.removeSelectors || [] ),
+		...( scenario.removeSelectors || [] ),
+	];
+
+	await pageSetViewport( page, viewport );
+	await pageSetCookies( page, cookies );
+	await page.goto( scenario.url, { waitUntil: 'networkidle0' } );
+	await pageSetLocalStorage( page, localStorage );
+	await pageRemoveSelectors( page, removeSelectors );
+
+	const image = await page.screenshot( { fullPage: true } );
 	await browser.close();
+
+	return image;
 }
 
 module.exports = generateScreenshot;

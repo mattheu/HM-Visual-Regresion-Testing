@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>HM Visual Regression Test Report</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" media="screen" href="./report.css" />
+</head>
+<body>
+	<h1>Visual Regression Test Results</h1>
+	<p>{{ results.length }} Tests</p>
+
+	<table class="report-table">
+		<thead>
+			<tr>
+				<th></th>
+				<th>Test</th>
+				<th>URL</th>
+				<th>Viewport</th>
+				<th>Status</th>
+			</tr>
+		</thead>
+
+		{{#results}}
+		<tr>
+			<th>
+				<button class="report-table__expand" data-target="expanded-report-{{slug}}">Details</button>
+			</th>
+			<td>{{label}}</td>
+			<td><code>{{url}}</code></td>
+			<td>{{viewport.label}} ({{viewport.width}}&times;{{viewport.height}})</td>
+			<td>
+				{{#if status}}
+					✅ Pass
+				{{/if}}
+
+				{{#unless status}}
+					❌ Fail
+				{{/unless}}
+			</td>
+		</tr>
+		{{/results}}
+	</table>
+
+	{{#results}}
+		<div id="expanded-report-{{slug}}" class="expanded-report expanded-report--test">
+			<div class="expanded-report__controls">
+				<button data-target="test">Test</button>
+				<button data-target="ref">Reference</button>
+				<button data-target="diff">Diff</button>
+				<button class="expanded-report__close">Close</button>
+			</div>
+			<div class="expanded-report__images">
+				<div class="expanded-report__test">
+					<img src="{{imgTest}}" alt="The test test image"/>
+				</div>
+				<div class="expanded-report__ref">
+					<img src="{{imgRef}}" alt="The test reference image"/>
+				</div>
+				<div class="expanded-report__diff">
+					{{#if status}}
+						<div class="expanded-report__ok">Test Passed</div>
+					{{/if}}
+
+					{{#unless status}}
+						<img src="{{imgDiff}}" alt="The test diff image"/>
+					{{/unless}}
+				</div>
+			</div>
+		</div>
+	{{/results}}
+
+	<script>
+		const buttons = document.querySelectorAll( '.report-table__expand[data-target]' );
+		const expanded = document.querySelectorAll( '.expanded-report' );
+		const expandedControls = document.querySelectorAll( '.expanded-report__controls button[data-target]' );
+
+		buttons && Array.from( buttons ).map( c => c.onclick = e => {
+			// reset
+			Array.from( expanded ).forEach( el => {
+				el.classList.remove( 'expanded-report--active' );
+				el.classList.remove( 'expanded-report--ref' );
+				el.classList.remove( 'expanded-report--diff' );
+				el.classList.add( 'expanded-report--test' );
+			} );
+
+			const modal = document.querySelector( `#${e.target.dataset.target}` );
+			modal && modal.classList.add( 'expanded-report--active' );
+		} );
+
+		const closeButtons = document.querySelectorAll( '.expanded-report__close' );
+		closeButtons && Array.from( closeButtons ).map( el => el.onclick = () => {
+			console.log( Array.from( expanded ) );
+			Array.from( expanded ).forEach( el => {
+				el.classList.remove( 'expanded-report--active' );
+				el.classList.remove( 'expanded-report--ref' );
+				el.classList.remove( 'expanded-report--diff' );
+				el.classList.add( 'expanded-report--test' );
+			} );
+		} );
+
+		expandedControls && Array.from( expandedControls ).map( el => el.onclick = e => {
+			Array.from( expanded ).forEach( el => {
+				el && el.classList.remove( 'expanded-report--test' );
+				el && el.classList.remove( 'expanded-report--ref' );
+				el && el.classList.remove( 'expanded-report--diff' );
+				el && el.classList.add( `expanded-report--${e.target.dataset.target}` );
+			} );
+		} );
+	</script>
+</body>
+</html>

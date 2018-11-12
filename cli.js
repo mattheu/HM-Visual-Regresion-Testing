@@ -2,6 +2,8 @@
 
 const fs = require( 'fs' );
 const hmTester = require( './index' );
+const CLI = require( 'clui' );
+const Spinner = CLI.Spinner;
 
 const readConfigFile = path => {
 	return JSON.parse( fs.readFileSync( path, 'utf8' ) );
@@ -14,9 +16,10 @@ const argv = require( 'yargs' )
 			type: 'string',
 			describe: 'Relative path to config file.',
 		} );
-	}, function ( argv ) {
-		const options = readConfigFile( argv.config );
-		hmTester.init( options );
+	}, async function ( argv ) {
+		const config = readConfigFile( argv.config );
+		const result = await hmTester.run( config );
+		console.log( { result } );
 	} )
 	.command( 'reset', 'Reset tests', yargs => {
 		yargs.positional( 'config', {
@@ -24,8 +27,17 @@ const argv = require( 'yargs' )
 			describe: 'Relative path to config file.',
 		} );
 	}, function ( argv ) {
-		const options = readConfigFile( argv.config );
-		hmTester.clearRefImages( options );
+		const config = readConfigFile( argv.config );
+		hmTester.resetAll( config );
+	} )
+	.command( 'approve', 'Approve all tests', yargs => {
+		yargs.positional( 'config', {
+			type: 'string',
+			describe: 'Relative path to config file.',
+		} );
+	}, function ( argv ) {
+		const config = readConfigFile( argv.config );
+		hmTester.approveAll( config );
 	} )
 	.help()
 	.argv
