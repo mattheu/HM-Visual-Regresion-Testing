@@ -14,16 +14,25 @@
 	<table class="report-table">
 		<thead>
 			<tr>
-				<th></th>
+				<th>Status</th>
 				<th>Test</th>
 				<th>URL</th>
 				<th>Viewport</th>
-				<th>Status</th>
+				<th></th>
 			</tr>
 		</thead>
 
 		{{#results}}
 		<tr>
+			<td>
+				{{#if status}}
+					✅ Pass
+				{{/if}}
+
+				{{#unless status}}
+					❌ Fail
+				{{/unless}}
+			</td>
 			<td>{{label}}</td>
 			<td>
 				<a href="{{url}}">
@@ -31,17 +40,7 @@
 				</a>
 			</td>
 			<td>{{viewport.label}} <code>({{viewport.width}}&times;{{viewport.height}})</code></td>
-			<td>
-				{{#if status}}
-					✅ Pass
-				{{/if}}
-
-				{{#unless status}}
-					<th>
-						<button class="report-table__expand" data-target="expanded-report-{{slug}}">❌ Fail</button>
-					</th>
-				{{/unless}}
-			</td>
+			<td><button class="report-table__expand" data-target="expanded-report-{{slug}}">Details</button></td>
 		</tr>
 		{{/results}}
 	</table>
