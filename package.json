@@ -12,6 +12,8 @@
     "@sindresorhus/slugify": "^0.3.0",
     "cli-table": "^0.3.1",
     "del": "^3.0.0",
+    "fs-extra": "^7.0.1",
+    "handlebars": "^4.0.12",
     "lodash": "^4.17.11",
     "pixelmatch": "^4.0.2",
     "pngjs": "^3.3.3",

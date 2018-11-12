@@ -2,8 +2,6 @@
 
 const fs = require( 'fs' );
 const hmTester = require( './index' );
-const CLI = require( 'clui' );
-const Spinner = CLI.Spinner;
 
 const readConfigFile = path => {
 	return JSON.parse( fs.readFileSync( path, 'utf8' ) );
@@ -29,6 +27,7 @@ const argv = require( 'yargs' )
 	}, function ( argv ) {
 		const config = readConfigFile( argv.config );
 		hmTester.resetAll( config );
+		console.log( 'The visual regression tests have been reset.' );
 	} )
 	.command( 'approve', 'Approve all tests', yargs => {
 		yargs.positional( 'config', {
@@ -38,6 +37,7 @@ const argv = require( 'yargs' )
 	}, function ( argv ) {
 		const config = readConfigFile( argv.config );
 		hmTester.approveAll( config );
+		console.log( 'All tests have been approved.' );
 	} )
 	.help()
 	.argv

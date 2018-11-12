@@ -29,7 +29,7 @@
 			</th>
 			<td>{{label}}</td>
 			<td><code>{{url}}</code></td>
-			<td>{{viewport.label}} ({{viewport.width}}&times;{{viewport.height}})</td>
+			<td>{{viewport.label}} <code>({{viewport.width}}&times;{{viewport.height}})</code></td>
 			<td>
 				{{#if status}}
 					✅ Pass
@@ -49,7 +49,7 @@
 				<button data-target="test">Test</button>
 				<button data-target="ref">Reference</button>
 				<button data-target="diff">Diff</button>
-				<button class="expanded-report__close">Close</button>
+				<button class="expanded-report__close">&times;</button>
 			</div>
 			<div class="expanded-report__images">
 				<div class="expanded-report__test">

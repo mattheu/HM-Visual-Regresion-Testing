@@ -387,6 +387,13 @@ button:focus {
 	padding: 10px;
   border: 1px solid #CCC;
   background: #FFF;
+  font-size: 14px;
+  line-height: 1.571;
+}
+
+.report-table th code,
+.report-table td code{
+  line-height: 1.964;
 }
 
 .report-table tr:nth-child(odd) td,
@@ -450,11 +457,6 @@ button:focus {
   z-index: 100;
 }
 
-.expanded-report__controls button {
-  height: 30px;
-  padding: 5px;
-}
-
 .expanded-report__images {
   height: 100%;
   overflow: auto;
@@ -472,11 +474,12 @@ button:focus {
 .expanded-report__ref,
 .expanded-report__diff {
   display: none;
-  position: absolute;
+
+  /* position: absolute;
   top: 0;
   bottom: 0;
   right: 0;
-  left: 0;
+  left: 0; */
 }
 
 .expanded-report--test .expanded-report__test,

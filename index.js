@@ -1,75 +1,40 @@
 const slugify = require( '@sindresorhus/slugify' );
-const fs = require( 'fs' );
 const _ = require( 'lodash' );
-const Table = require( 'cli-table' );
 
-const defaultOptions = require( './defaultOptions' );
-const setup = require( './inc/setup' );
-const files = require( './inc/files' );
+const setup = require( './inc/setupDirectories' );
 const getLoggedInCookies = require( './inc/getLoggedInCookies' );
-const compareImages = require( './inc/compareImg' );
 const generateResultsFile = require( './inc/generateResultsFile' );
 const generateScreenshot = require( './inc/generateScreenshot' );
+const Test = require( './inc/Test' );
 const Result = require( './inc/Result' );
 const reset = require( './inc/reset' );
+const parseOptions = require( './inc/parseOptions' );
 
 const runTest = async ( scenario, options ) => {
 	console.log( `Running test: ${scenario.label} - ${scenario.viewport.label}` );
 
-	const {
-		cookies = [],
-		localStorage = {},
-		directories,
-	} = options;
+	const slug = slugify( `${scenario.label} - ${scenario.viewport.label}` );
+	const image = await generateScreenshot( scenario, options );
+	const test = new Test( slug, options );
+	const status =  await test.run( image );
 
-	const slug = slugify( `${scenario.label}-${scenario.viewport.label}` )
-	const referenceImagePath = files.getRefFilePath( slug, directories );
-	const testImagePath = files.getTestFilePath( slug, directories );
-
-	if ( fs.existsSync( referenceImagePath ) ) {
-		const diffImagePath = files.getDiffFilePath( slug, directories );
-
-		await generateScreenshot( scenario, testImagePath, {
-			cookies,
-			localStorage,
-		} );
-
-		const isMatch = await compareImages( testImagePath, referenceImagePath, diffImagePath );
-
-		return new Result( {
-			scenario,
-			slug,
-			status: isMatch ? 'ok' : 'fail',
-			imgRef: referenceImagePath,
-			imgTest: testImagePath,
-			imgDiff: diffImagePath,
-		} );
-	} else {
-		await generateScreenshot( scenario, referenceImagePath, {
-			cookies,
-			localStorage,
-		} );
-
-		return new Result( {
-			scenario,
-			slug,
-			status: 'new',
-			imgRef: referenceImagePath,
-			imgTest: testImagePath,
-		} );
-	}
+	return new Result( {
+		scenario,
+		slug,
+		status,
+	} );
 }
 
 /**
- * Run tests.
+ * Prepare Tests.
  *
- * Tests are run concurrently.
- * But in batches of opt.testBatchCount
+ * Generate a test for each scenario for each viewport.
  *
- * @param {*} scenarios
- * @param {*} viewports
+ * @param {array} scenarios
+ * @param {array} viewports
+ * @param {array} Tests
  */
-const runTests = async ( scenarios, viewports, options ) => {
+const prepareTests = ( scenarios, viewports ) => {
 	const tests = [];
 
 	// Combine scenarios and viewports into flat tests array.
@@ -82,6 +47,19 @@ const runTests = async ( scenarios, viewports, options ) => {
 		} );
 	} );
 
+	return tests;
+}
+
+/**
+ * Run tests.
+ *
+ * Tests are run concurrently.
+ * But in batches of opt.testBatchCount
+ *
+ * @param {*} scenarios
+ * @param {*} viewports
+ */
+const runTests = async ( tests, options ) => {
 	// Chunk up tests to run in batches.
 	// Results will be added to results array (but in batches)
 	const results = [];
@@ -101,12 +79,17 @@ const runTests = async ( scenarios, viewports, options ) => {
 	return _.flatten( results );
 }
 
-module.exports.init = async ( { options: userOptions, scenarios, viewports } ) => {
-	const options = {
-		...defaultOptions,
-		...userOptions,
-	};
+const formatResults = ( results, options ) => {
+	return results.map( result => ( {
+		...result.toJson(),
+		imgRef: `./${options.directories.imgRef}/${result.slug}.png`,
+		imgTest: `./${options.directories.imgTest}/${result.slug}.png`,
+		imgDiff: `./${options.directories.imgDiff}/${result.slug}.png`,
+	} ) );
+}
 
+const run = async ( { options: userOptions, scenarios, viewports } ) => {
+	const options = parseOptions( userOptions );
 	setup( options );
 
 	// If at least one test requires log in, grab the cookies in preparation.
@@ -114,31 +97,38 @@ module.exports.init = async ( { options: userOptions, scenarios, viewports } ) =
 		options.cookies = options.cookies.concat( await getLoggedInCookies( options.login ) );
 	}
 
-	const results = await runTests( scenarios, viewports, options );
+	const tests = prepareTests( scenarios, viewports );
+	const results = await runTests( tests, options );
+	generateResultsFile( formatResults( results, options ), options.directories.base );
 
-	// Format results.
-	const formattedResults = results.map( result => {
-		const json = result.toJson();
-		json.imgRef.src = json.imgRef.src.replace( `${options.directories.base}/`, '' );
-		json.imgTest.src = json.imgTest.src.replace( `${options.directories.base}/`, '' );
-		json.imgDiff.src = json.imgDiff.src.replace( `${options.directories.base}/`, '' );
-		return json
-	} );
-
-	generateResultsFile( formattedResults, options.directories.base );
-
-	const table = new Table( {
-		head: [ 'Test Name', 'Status', 'Reference', 'Test', 'Diff' ],
-	} );
-
-	console.log( table.toString( results.forEach( result => table.push( Object.values( result.format() ) ) ) ) );
+	return ! results.find( result => result.status === false );
 }
 
-module.exports.clearRefImages = async userOptions => {
-	const options = {
-		...defaultOptions,
-		...userOptions,
-	};
+const resetAll = async ( { options: userOptions } ) => {
+	const options = parseOptions( userOptions );
+	await reset( options.directories );
+}
 
-	reset( options.directories );
+const approveAll = async ( { options: userOptions, scenarios, viewports } ) => {
+	const tests = prepareTests( scenarios, viewports );
+	const options = parseOptions( userOptions );
+
+	const results = await Promise.all( tests.map( async scenario => {
+		const slug = slugify( `${scenario.label} - ${scenario.viewport.label}` );
+		const test = new Test( slug );
+		await test.approve();
+		return new Result( {
+			scenario,
+			slug,
+			status: true,
+		} );
+	} ) );
+
+	generateResultsFile( formatResults( results, options ), options.directories.base );
+}
+
+module.exports = {
+	run,
+	resetAll,
+	approveAll,
 }
