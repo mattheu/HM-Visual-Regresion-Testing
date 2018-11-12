@@ -1,5 +1,7 @@
 const slugify = require( '@sindresorhus/slugify' );
 const _ = require( 'lodash' );
+const util = require('util');
+const setTimeoutPromise = util.promisify( setTimeout );
 
 const setup = require( './inc/setupDirectories' );
 const getLoggedInCookies = require( './inc/getLoggedInCookies' );
@@ -68,6 +70,7 @@ const runTests = async ( tests, options ) => {
 	for ( let i = 0; i < batches.length; i++ ) {
 		results.push( await Promise.all( batches[ i ].map( async test => {
 			try {
+				await setTimeoutPromise( 250 ); // Don't send too many requests all at once.
 				return await runTest( test, options )
 			} catch ( error ) {
 				console.log( 'error running test', error );

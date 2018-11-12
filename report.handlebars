@@ -24,11 +24,12 @@
 
 		{{#results}}
 		<tr>
-			<th>
-				<button class="report-table__expand" data-target="expanded-report-{{slug}}">Details</button>
-			</th>
 			<td>{{label}}</td>
-			<td><code>{{url}}</code></td>
+			<td>
+				<a href="{{url}}">
+					<code>{{url}}</code>
+				</a>
+			</td>
 			<td>{{viewport.label}} <code>({{viewport.width}}&times;{{viewport.height}})</code></td>
 			<td>
 				{{#if status}}
@@ -36,7 +37,9 @@
 				{{/if}}
 
 				{{#unless status}}
-					❌ Fail
+					<th>
+						<button class="report-table__expand" data-target="expanded-report-{{slug}}">❌ Fail</button>
+					</th>
 				{{/unless}}
 			</td>
 		</tr>
