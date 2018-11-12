@@ -70,7 +70,12 @@ const generateScreenshot = async ( scenario, options ) => {
 
 	await pageSetViewport( page, viewport );
 	await pageSetCookies( page, cookies );
-	await page.goto( scenario.url, { waitUntil: 'networkidle0' } );
+
+	await page.goto( scenario.url, {
+		waitUntil: 'networkidle0',
+		timeout: 60000,
+	} );
+
 	await pageSetLocalStorage( page, localStorage );
 	await page.waitFor( scenario.waitFor || options.waitFor || 0 );
 	await pageRemoveSelectors( page, removeSelectors );

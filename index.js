@@ -115,7 +115,7 @@ const approveAll = async ( { options: userOptions, scenarios, viewports } ) => {
 
 	const results = await Promise.all( tests.map( async scenario => {
 		const slug = slugify( `${scenario.label} - ${scenario.viewport.label}` );
-		const test = new Test( slug );
+		const test = new Test( slug, options );
 		await test.approve();
 		return new Result( {
 			scenario,

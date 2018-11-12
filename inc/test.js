@@ -64,8 +64,9 @@ class Test {
 	approve() {
 		const testPath = this.getTestFilePath();
 		const refPath = this.getRefFilePath();
+		const diffPath = this.getDiffFilePath();
 		fs.existsSync( testPath ) && fs.copySync( testPath, refPath );
-		del( this.getDiffFilePath( this.id, this.options.directories ) );
+		del( diffPath );
 	}
 }
 
