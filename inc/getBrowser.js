@@ -2,7 +2,7 @@ const puppeteer = require( 'puppeteer' );
 
 let browser;
 
-const getBrowser = async ( { debug = flase, slowMo = 0 } = {} ) => {
+const getBrowser = async ( { debug = false, slowMo = 0 } = {} ) => {
 	if ( browser ) {
 		return browser;
 	}
