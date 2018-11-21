@@ -87,21 +87,32 @@
 		const expanded = document.querySelectorAll( '.expanded-report' );
 		const expandedControls = document.querySelectorAll( '.expanded-report__controls button[data-target]' );
 
+		const CLASSES = {
+			EXPANDED_REPORT: 'expanded-report',
+			EXPANDED_REPORT_ACTIVE: 'expanded-report--active',
+			EXPANDED_REPORT_REF: 'expanded-report--ref',
+			EXPANDED_REPORT_DIFF: 'expanded-report--diff',
+			EXPANDED_REPORT_TEST: 'expanded-report--test',
+			EXPANDED_REPORT_CLOSE: 'expanded-report__close',
+			EXPANDED_REPORT_PREV: 'expanded-report__prev',
+			EXPANDED_REPORT_NEXT: 'expanded-report__next',
+		};
+
 		const closeModal = el => {
-			el.classList.remove( 'expanded-report--active' );
-			el.classList.remove( 'expanded-report--ref' );
-			el.classList.remove( 'expanded-report--diff' );
-			el.classList.add( 'expanded-report--test' );
+			el.classList.remove( CLASSES.EXPANDED_REPORT_ACTIVE );
+			el.classList.remove( CLASSES.EXPANDED_REPORT_REF );
+			el.classList.remove( CLASSES.EXPANDED_REPORT_DIFF );
+			el.classList.add( CLASSES.EXPANDED_REPORT_TEST );
 		}
 
 		const closeAllModals = () => {
 			Array.from( expanded )
-				.filter( el => el.classList.contains( 'expanded-report--active' ) )
+				.filter( el => el.classList.contains( CLASSES.EXPANDED_REPORT_ACTIVE ) )
 				.forEach( el => closeModal( el ) );
 		}
 
 		const openModal = el => {
-			el.classList.add( 'expanded-report--active' );
+			el.classList.add( CLASSES.EXPANDED_REPORT_ACTIVE );
 		}
 
 		buttons && Array.from( buttons ).map( c => c.onclick = e => {
@@ -110,31 +121,35 @@
 			target && openModal( target );
 		} );
 
-		const closeButtons = document.querySelectorAll( '.expanded-report__close' );
+		const closeButtons = document.querySelectorAll( `.${CLASSES.EXPANDED_REPORT_CLOSE}` );
 		closeButtons && Array.from( closeButtons ).map( el => el.onclick = () => closeAllModals() );
 
-		const nextButtons = document.querySelectorAll( '.expanded-report__next' );
-		nextButtons && Array.from( nextButtons ).map( el => el.onclick = e => {
-			const modal = e.target.closest( '.expanded-report' );
-			console.log( e.target, modal, modal.nextElementSibling );
+		const prevButtons = document.querySelectorAll( `.${CLASSES.EXPANDED_REPORT_PREV}` );
+		prevButtons && Array.from( prevButtons ).map( el => el.onclick = e => {
+			const modal = e.target.closest( `.${CLASSES.EXPANDED_REPORT}` );
+			const prevEl = modal.previousElementSibling;
 			closeAllModals();
-			openModal( modal.nextElementSibling );
+			if ( prevEl.classList.contains( CLASSES.EXPANDED_REPORT ) ) {
+				openModal( prevEl );
+			}
 		} );
 
-		const prevButtons = document.querySelectorAll( '.expanded-report__prev' );
-		prevButtons && Array.from( prevButtons ).map( el => el.onclick = e => {
-			const modal = e.target.closest( '.expanded-report' );
-			console.log( e.target, modal, modal.previousElementSibling );
+		const nextButtons = document.querySelectorAll( `.${CLASSES.EXPANDED_REPORT_NEXT}` );
+		nextButtons && Array.from( nextButtons ).map( el => el.onclick = e => {
+			const modal = e.target.closest( `.${CLASSES.EXPANDED_REPORT}` );
+			const nextEl = modal.nextElementSibling;
 			closeAllModals();
-			openModal( modal.previousElementSibling );
+			if ( nextEl.classList.contains( CLASSES.EXPANDED_REPORT ) ) {
+				openModal( nextEl );
+			}
 		} );
 
 		expandedControls && Array.from( expandedControls ).map( el => el.onclick = e => {
 			Array.from( expanded ).forEach( el => {
-				el && el.classList.remove( 'expanded-report--test' );
-				el && el.classList.remove( 'expanded-report--ref' );
-				el && el.classList.remove( 'expanded-report--diff' );
-				el && el.classList.add( `expanded-report--${e.target.dataset.target}` );
+				el && el.classList.remove( CLASSES.EXPANDED_REPORT_TEST );
+				el && el.classList.remove( CLASSES.EXPANDED_REPORT_REF );
+				el && el.classList.remove( CLASSES.EXPANDED_REPORT_DIFF );
+				el && el.classList.add( `${ CLASSES.EXPANDED_REPORT }--${e.target.dataset.target}` );
 			} );
 		} );
 	</script>
