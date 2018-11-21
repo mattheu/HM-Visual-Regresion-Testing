@@ -64,20 +64,20 @@
 				</div>
 			</div>
 			<div class="expanded-report__images">
-				{{#unless status}}
-					<div class="expanded-report__test">
-						<img src="{{imgTest}}" alt="The test test image"/>
-					</div>
-					<div class="expanded-report__ref">
-						<img src="{{imgRef}}" alt="The test reference image"/>
-					</div>
-					<div class="expanded-report__diff">
+				<div class="expanded-report__test">
+					<img src="{{imgTest}}" alt="The test test image"/>
+				</div>
+				<div class="expanded-report__ref">
+					<img src="{{imgRef}}" alt="The test reference image"/>
+				</div>
+				<div class="expanded-report__diff">
+					{{#unless status}}
 						<img src="{{imgDiff}}" alt="The test diff image"/>
-					</div>
-				{{/unless}}
-				{{#if status}}
-					<div class="expanded-report__ok">Test Passed</div>
-				{{/if}}
+					{{/unless}}
+					{{#if status}}
+						<div class="expanded-report__ok">Test Passed</div>
+					{{/if}}
+				</div>
 			</div>
 		</div>
 	{{/results}}
