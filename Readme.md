@@ -3,7 +3,7 @@
 ```
 {
 	"options": {
-		"testBatchCount": 2,
+		"concurrentTests": 2,
 		"removeSelectors": [
 			".hide-me",
 		]
