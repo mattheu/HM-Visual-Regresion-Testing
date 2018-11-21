@@ -1,7 +1,5 @@
 const slugify = require( '@sindresorhus/slugify' );
-const _ = require( 'lodash' );
 const util = require('util');
-const setTimeoutPromise = util.promisify( setTimeout );
 
 const setup = require( './inc/setupDirectories' );
 const getLoggedInCookies = require( './inc/getLoggedInCookies' );
