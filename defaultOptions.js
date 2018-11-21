@@ -5,7 +5,7 @@ module.exports = {
 		imgRef: 'img-ref',
 		imgTest: 'img-test',
 	},
-	testBatchCount: 10,
+	concurrentTests: 10,
 	cookies: [],
 	localStorage: {},
 }

@@ -11,6 +11,8 @@ const Test = require( './inc/Test' );
 const Result = require( './inc/Result' );
 const reset = require( './inc/reset' );
 const parseOptions = require( './inc/parseOptions' );
+const { getBrowser, closeBrowser } = require( './inc/getBrowser' );
+const Queue = require( './inc/Queue' );
 
 const runTest = async ( scenario, options ) => {
 	console.log( `Running test: ${scenario.label} - ${scenario.viewport.label}` );
@@ -62,24 +64,17 @@ const prepareTests = ( scenarios, viewports ) => {
  * @param {*} viewports
  */
 const runTests = async ( tests, options ) => {
-	// Chunk up tests to run in batches.
-	// Results will be added to results array (but in batches)
-	const results = [];
-	const batches = _.chunk( tests, options.testBatchCount );
+	getBrowser();
+	const queue = new Queue( { concurrent: options.concurrentTests } );
 
-	for ( let i = 0; i < batches.length; i++ ) {
-		results.push( await Promise.all( batches[ i ].map( async test => {
-			try {
-				await setTimeoutPromise( 250 ); // Don't send too many requests all at once.
-				return await runTest( test, options )
-			} catch ( error ) {
-				console.log( 'error running test', error );
-			}
-		 } ) ) );
-	}
+	tests.forEach( test => queue.addTask( async ( _test, _options ) => {
+		return await runTest( _test, _options )
+	}, [ test, options ] ) );
 
-	// Flatten results to account for batches.
-	return _.flatten( results );
+	await queue.run();
+	closeBrowser();
+
+	return queue.tasks.map( t => t.result );
 }
 
 const formatResults = ( results, options ) => {
@@ -93,10 +88,11 @@ const formatResults = ( results, options ) => {
 
 const run = async ( { options: userOptions, scenarios, viewports } ) => {
 	const options = parseOptions( userOptions );
+
 	setup( options );
 
-	// If at least one test requires log in, grab the cookies in preparation.
-	if ( options.login && scenarios.find( scenario => scenario.loggedIn ) ) {
+	// If login credentials provided, log in once.
+	if ( options.login ) {
 		options.cookies = options.cookies.concat( await getLoggedInCookies( options.login ) );
 	}
 

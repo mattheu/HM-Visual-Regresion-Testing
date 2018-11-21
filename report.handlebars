@@ -48,27 +48,36 @@
 	{{#results}}
 		<div id="expanded-report-{{slug}}" class="expanded-report expanded-report--test">
 			<div class="expanded-report__controls">
-				<button data-target="test">Test</button>
-				<button data-target="ref">Reference</button>
-				<button data-target="diff">Diff</button>
-				<button class="expanded-report__close">&times;</button>
+				<div class="expanded-report__left-controls">
+					<button data-target="test">Test</button>
+					<button data-target="ref">Reference</button>
+					<button data-target="diff">Diff</button>
+				</div>
+				<div class="expanded-report__title">
+					{{#if status}}✅ {{/if}} {{#unless status}}❌{{/unless}}
+					<b>{{label}}</b>
+				</div>
+				<div class="expanded-report__right-controls">
+					<button class="expanded-report__prev">&#9664;</button>
+					<button class="expanded-report__next">&#9654;</button>
+					<button class="expanded-report__close">&times;</button>
+				</div>
 			</div>
 			<div class="expanded-report__images">
-				<div class="expanded-report__test">
-					<img src="{{imgTest}}" alt="The test test image"/>
-				</div>
-				<div class="expanded-report__ref">
-					<img src="{{imgRef}}" alt="The test reference image"/>
-				</div>
-				<div class="expanded-report__diff">
-					{{#if status}}
-						<div class="expanded-report__ok">Test Passed</div>
-					{{/if}}
-
-					{{#unless status}}
+				{{#unless status}}
+					<div class="expanded-report__test">
+						<img src="{{imgTest}}" alt="The test test image"/>
+					</div>
+					<div class="expanded-report__ref">
+						<img src="{{imgRef}}" alt="The test reference image"/>
+					</div>
+					<div class="expanded-report__diff">
 						<img src="{{imgDiff}}" alt="The test diff image"/>
-					{{/unless}}
-				</div>
+					</div>
+				{{/unless}}
+				{{#if status}}
+					<div class="expanded-report__ok">Test Passed</div>
+				{{/if}}
 			</div>
 		</div>
 	{{/results}}
@@ -78,28 +87,46 @@
 		const expanded = document.querySelectorAll( '.expanded-report' );
 		const expandedControls = document.querySelectorAll( '.expanded-report__controls button[data-target]' );
 
-		buttons && Array.from( buttons ).map( c => c.onclick = e => {
-			// reset
-			Array.from( expanded ).forEach( el => {
-				el.classList.remove( 'expanded-report--active' );
-				el.classList.remove( 'expanded-report--ref' );
-				el.classList.remove( 'expanded-report--diff' );
-				el.classList.add( 'expanded-report--test' );
-			} );
+		const closeModal = el => {
+			el.classList.remove( 'expanded-report--active' );
+			el.classList.remove( 'expanded-report--ref' );
+			el.classList.remove( 'expanded-report--diff' );
+			el.classList.add( 'expanded-report--test' );
+		}
 
-			const modal = document.querySelector( `#${e.target.dataset.target}` );
-			modal && modal.classList.add( 'expanded-report--active' );
+		const closeAllModals = () => {
+			Array.from( expanded )
+				.filter( el => el.classList.contains( 'expanded-report--active' ) )
+				.forEach( el => closeModal( el ) );
+		}
+
+		const openModal = el => {
+			el.classList.add( 'expanded-report--active' );
+		}
+
+		buttons && Array.from( buttons ).map( c => c.onclick = e => {
+			closeAllModals();
+			const target = document.querySelector( `#${e.target.dataset.target}` );
+			target && openModal( target );
 		} );
 
 		const closeButtons = document.querySelectorAll( '.expanded-report__close' );
-		closeButtons && Array.from( closeButtons ).map( el => el.onclick = () => {
-			console.log( Array.from( expanded ) );
-			Array.from( expanded ).forEach( el => {
-				el.classList.remove( 'expanded-report--active' );
-				el.classList.remove( 'expanded-report--ref' );
-				el.classList.remove( 'expanded-report--diff' );
-				el.classList.add( 'expanded-report--test' );
-			} );
+		closeButtons && Array.from( closeButtons ).map( el => el.onclick = () => closeAllModals() );
+
+		const nextButtons = document.querySelectorAll( '.expanded-report__next' );
+		nextButtons && Array.from( nextButtons ).map( el => el.onclick = e => {
+			const modal = e.target.closest( '.expanded-report' );
+			console.log( e.target, modal, modal.nextElementSibling );
+			closeAllModals();
+			openModal( modal.nextElementSibling );
+		} );
+
+		const prevButtons = document.querySelectorAll( '.expanded-report__prev' );
+		prevButtons && Array.from( prevButtons ).map( el => el.onclick = e => {
+			const modal = e.target.closest( '.expanded-report' );
+			console.log( e.target, modal, modal.previousElementSibling );
+			closeAllModals();
+			openModal( modal.previousElementSibling );
 		} );
 
 		expandedControls && Array.from( expandedControls ).map( el => el.onclick = e => {

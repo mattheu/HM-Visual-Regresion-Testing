@@ -1,13 +1,8 @@
 const puppeteer = require( 'puppeteer' );
+const { getBrowser } = require( './getBrowser' );
 
 const launchPuppeteer = async () => {
-	const options = {
-		// headless: false,
-		// slowMo: 250,
-	};
-
-	const browser = await puppeteer.launch( options );
-
+	const browser = await getBrowser();
 	const page = await browser.newPage();
 
 	return {
@@ -61,7 +56,7 @@ const pageRemoveSelectors = async ( page, removeSelectors ) => {
 const generateScreenshot = async ( scenario, options ) => {
 	const { viewport } = scenario;
 	const { cookies = [], localStorage = {} } = options;
-	const { browser, page } = await launchPuppeteer();
+	const { page } = await launchPuppeteer();
 
 	const removeSelectors = [
 		...( options.removeSelectors || [] ),
@@ -81,7 +76,7 @@ const generateScreenshot = async ( scenario, options ) => {
 	await pageRemoveSelectors( page, removeSelectors );
 
 	const image = await page.screenshot( { fullPage: true } );
-	await browser.close();
+	await page.close();
 
 	return image;
 }

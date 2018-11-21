@@ -494,9 +494,14 @@ button:focus {
   background: #23c568;
 }
 
+.expanded-report__controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .expanded-report__close {
   background: #c52323;
-  float: right;
 }
 
 .expanded-report__close:hover,
